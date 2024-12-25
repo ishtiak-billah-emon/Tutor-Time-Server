@@ -79,12 +79,31 @@ async function run() {
       res.send(result);
     });
 
+    // Get some tutorials by email [my tutorial]
+
+    app.get("/myTutorials/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await tutorialCollection.find(query).toArray();
+      res.send(result);
+    });
     // post tutorial
     app.post("/tutorials", async (req, res) => {
       const tutorial = req.body;
       const result = await tutorialCollection.insertOne(tutorial);
       res.send(result);
     });
+    
+    // delete tutorial by id
+
+    app.delete("/tutorials/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await tutorialCollection.deleteOne(query);
+      res.send(result);
+    });
+    
+
 
     //////////////////////////////////////////////////
     // Booked Tutorial
