@@ -37,7 +37,9 @@ async function run() {
 
     const tutorialCollection = client.db("TutorTime").collection("tutorials");
     const userCollection = client.db("TutorTime").collection("users");
-    const bookedTutorialCollection = client.db("TutorTime").collection("bookedTutorial");
+    const bookedTutorialCollection = client
+      .db("TutorTime")
+      .collection("bookedTutorial");
 
     // USER COLLECTION
 
@@ -72,7 +74,7 @@ async function run() {
     //Get specific tutorial by ID
     app.get("/tutorials/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await tutorialCollection.findOne(query);
       res.send(result);
     });
@@ -87,13 +89,68 @@ async function run() {
     //////////////////////////////////////////////////
     // Booked Tutorial
 
-    app.post('/bookedTutorial', async (req, res)=>{
+    // Booking a tutorial
+    app.post("/bookedTutorial", async (req, res) => {
       const tutorial = req.body;
       const result = await bookedTutorialCollection.insertOne(tutorial);
       res.send(result);
-    })
+    });
 
+    // Getting all the booked tutorial
 
+    app.get("/bookedTutorial", async (req, res) => {
+      const cursor = bookedTutorialCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //get all the booked tutorial by email address
+
+    // app.get('/bookedTutorial', async (req,res)=>{
+    //   const email = req.query.email;
+    //   const query = {userEmail : email};
+    //   const result = await bookedTutorialCollection.find(query).toArray();
+
+    //   for(const tutorial of result) {
+    //     const query1 = {_id: new ObjectId(tutorial.tutorId)};
+    //     const tutor = await tutorialCollection.findOne(query1);
+    //     if(tutor) {
+    //       tutorial.rating = tutor.rating;
+    //       tutorial.description = tutor.description;
+    //       console.log('found');
+    //     }
+    //   }
+    //   res.send(result);
+    // })
+
+    app.get("/bookedTutorial/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { userEmail: email };
+      const bookedTutorials = await bookedTutorialCollection
+        .find(filter)
+        .toArray();
+
+      // Array to hold matched tutorial details
+      const matchedTutorials = [];
+
+      // Loop through booked tutorials and fetch details from tutorialCollection
+      for (const tutorial of bookedTutorials) {
+        const tutorId = tutorial.tutorId;
+
+        // Find the matching document in tutorialCollection
+        const matchedTutorial = await tutorialCollection.findOne({
+          _id: new ObjectId(tutorId),
+        });
+
+        // Add the matched tutorial details to the array
+        if (matchedTutorial) {
+          matchedTutorials.push(matchedTutorial);
+        }
+      }
+
+      // Send the matched tutorials in the response
+      res.send(matchedTutorials);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
