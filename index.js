@@ -37,6 +37,7 @@ async function run() {
 
     const tutorialCollection = client.db("TutorTime").collection("tutorials");
     const userCollection = client.db("TutorTime").collection("users");
+    const bookedTutorialCollection = client.db("TutorTime").collection("bookedTutorial");
 
     // USER COLLECTION
 
@@ -82,6 +83,15 @@ async function run() {
       const result = await tutorialCollection.insertOne(tutorial);
       res.send(result);
     });
+
+    //////////////////////////////////////////////////
+    // Booked Tutorial
+
+    app.post('/bookedTutorial', async (req, res)=>{
+      const tutorial = req.body;
+      const result = await bookedTutorialCollection.insertOne(tutorial);
+      res.send(result);
+    })
 
 
   } finally {
