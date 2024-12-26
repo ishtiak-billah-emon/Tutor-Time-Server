@@ -42,12 +42,20 @@ async function run() {
       .collection("bookedTutorial");
 
     // USER COLLECTION
+    
+    app.get("/users", async (req, res) => {    
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
       const result = await userCollection.insertOne(newUser);
       res.send(result);
     });
+
+
 
     app.patch("/users", async (req, res) => {
       const email = req.body.email;
@@ -65,10 +73,18 @@ async function run() {
     //TUTORIAL
 
     // GET the tutorials from the server
+    // app.get("/tutorials", async (req, res) => {
+    //   const cursor = tutorialCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
     app.get("/tutorials", async (req, res) => {
-      const cursor = tutorialCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
+      const { category } = req.query;
+      const query = category ? { language: category } : {};
+      const tutorials = await tutorialCollection.find(query).toArray();
+
+      res.send(tutorials);
     });
 
     //Get specific tutorial by ID
@@ -80,30 +96,66 @@ async function run() {
     });
 
     // Get some tutorials by email [my tutorial]
-
     app.get("/myTutorials/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const result = await tutorialCollection.find(query).toArray();
       res.send(result);
     });
+
     // post tutorial
     app.post("/tutorials", async (req, res) => {
       const tutorial = req.body;
       const result = await tutorialCollection.insertOne(tutorial);
       res.send(result);
     });
-    
-    // delete tutorial by id
 
+    // increment review
+    // app.patch("/tutorials/review/:id", async (req, res) => {
+    //   const id = req.params.id;
+
+    //   const filter = { _id: new ObjectId(id) };
+    //   const updateDoc = { $inc: { review: 1 } }; // Increment review by 1
+
+    //   const result = await tutorialCollection.updateOne(filter, updateDoc);
+    //   res.send(result);
+     
+    // });
+
+    // update the tutorial
+
+    app.put("/updateTutorial/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedTutorial = req.body;
+
+      const tutorial = {
+        $set: {
+          name: updatedTutorial.name,
+          email: updatedTutorial.email,
+          photo: updatedTutorial.photo,
+          language: updatedTutorial.language,
+          price: updatedTutorial.price,
+          description: updatedTutorial.description,
+          rating: updatedTutorial.rating,
+        },
+      };
+
+      const result = await tutorialCollection.updateOne(
+        filter,
+        tutorial,
+        options
+      );
+      res.send(result);
+    });
+    // delete tutorial by id
     app.delete("/tutorials/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await tutorialCollection.deleteOne(query);
       res.send(result);
     });
-    
-
 
     //////////////////////////////////////////////////
     // Booked Tutorial
@@ -181,5 +233,5 @@ app.get("/", (req, res) => {
   res.send("Tutor-Time : Learn your language");
 });
 app.listen(port, () => {
-  console.log(`Tutor-Time : listen at port ${port}`);
+  // console.log(`Tutor-Time : listen at port ${port}`);
 });
